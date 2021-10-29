@@ -81,30 +81,58 @@ def DTpredict(data, model, prediction):
     1
     ...
     """
+def readModel(model):
     infile = open(model, 'r')
     for line in infile:
         atts = [i for i in line.split()]
-    n = atts[0]
-    
+    root = readNode(atts)
 
 def readNode(infile):
     #read att for node
     n = infile[0]
     if n[0] == '[': #build return node
-        return null #huh??????
+        return TreeNode(null, null, n.substring(1, len(n) - 1))
     #build interior node
-    node = TreeNode ##idk new TreeNode
+    node = TreeNode(n, {}, null)
     val = infile[2]
 
     index = 2
     while val is not ")":
-        ##huh??
+        node.children.put(val, readNode(infile))
         index += 1
         val[index]
-    return node    
+    return node
 
+def predictFromModel(data):
+    try:
+        s = open(data, 'r')
+        data = []
+        predictions = []
+        for element in s:
+            next(s) #skips -1
+            for element in attArr:
+                data.append(element)
+            pred = traceTree(root, data)
+            predictions.append(pred)
+    except:
+        print("test file has error")
 
-    pass
+def traceTree(node, data):
+    if node.returnVal is not null:
+        return node.returnVal
+    att = node.attribute
+    val = data.get(attArr.index(att))
+    t = node.children.get(val)
+    return traceTree(t, data)
+
+def savePredictions(output):
+    try:
+        outfile = open(output, 'w')
+        for element in predictions:
+            outfile.write(element)
+        outfile.close()
+    except:
+        print("error writing to file")
 
 
 def EvaDT(predictionLabel, realLabel, output):
