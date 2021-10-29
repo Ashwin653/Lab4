@@ -31,34 +31,10 @@ class TreeNode:
     def __str__(parent):
         return str(parent.attribute)
 
+def log2(x):
+    if(x == 0): return 0
+    return math.log(x)/math.log(2)      
 
-# The Write node method, made instead in python.
-def writeNode(outfile, current):
-    if(current.returnVal != None):
-        outfile.print("[" + current.returnVal + "] ")
-        return
-    outfile.print(current.attribute + " ( ")
-    for ch in current.children:
-        outfile.print(ch.getKey() + " ")
-        writeNode(outfile, ch.getValue())
-    outfile.print(" ) ")
-    
-
-# Saves the loaded model to a file.
-def saveModel(modelfile, numAtts, root, atts):
-    try:
-        file = open(modelfile, "w")
-        i = 0
-        while(i < len(numAtts)):
-            file.write(atts[i+1] + " ")
-        file.write("\n")
-        writeNode(file, root)
-        file.close()
-    except:
-        print("Error writing to file ")
-        sys.exit(0)
-        
-        
 
 def DTtrain(data, model):
     """
@@ -158,6 +134,32 @@ def EvaDT(predictionLabel, realLabel, output):
     result = "In total, there are "+str(length)+" predictions. "+str(correct)+" are correct and "+ str(incorrect) + " are incorrect. The percentage is "+str(Rate)
     with open(output, "w") as fh:
         fh.write(result)
+
+# The Write node method, made instead in python.
+def writeNode(outfile, current):
+    if(current.returnVal != None):
+        outfile.print("[" + current.returnVal + "] ")
+        return
+    outfile.print(current.attribute + " ( ")
+    for ch in current.children:
+        outfile.print(ch.getKey() + " ")
+        writeNode(outfile, ch.getValue())
+    outfile.print(" ) ")
+    
+
+# Saves the loaded model to a file.
+def saveModel(modelfile, numAtts, root, atts):
+    try:
+        file = open(modelfile, "w")
+        i = 0
+        while(i < len(numAtts)):
+            file.write(atts[i+1] + " ")
+        file.write("\n")
+        writeNode(file, root)
+        file.close()
+    except:
+        print("Error writing to file ")
+        sys.exit(0)
 
 def main():
     options = parser.parse_args()
