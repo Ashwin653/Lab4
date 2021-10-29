@@ -1,17 +1,18 @@
-"""
- Name: Your Name
+""
+ Name: Romeo Garcia, Ashwin Deodhar, Angela You
  Assignment: Lab 4 - Decision Tree
  Course: CS 330
  Semester: Fall 2021
  Instructor: Dr. Cao
- Date: the current date
- Sources consulted: any books, individuals, etc consulted
+ Date: 10/26/21
 
- Known Bugs: description of known bugs and other program imperfections
+ Sources consulted: N/A
+ Known Bugs: N/A
+ Creativity: N/A
 
- Creativity: anything extra that you added to the lab
-
- Instructions: After a lot of practice in Python, in this lab, you are going to design the program for decision tree and implement it from scrath! Don't be panic, you still have some reference, actually you are going to translate the JAVA code to Python! The format should be similar to Lab 2!
+ Instructions: After a lot of practice in Python, in this lab, you are going to design the program
+ for decision tree and implement it from scrath! Don't be panic, you still have some reference, 
+ actually you are going to translate the JAVA code to Python! The format should be similar to Lab 2!
 
 """
 import sys
@@ -19,13 +20,45 @@ import argparse
 import math
 import os
 
-# You may need to define the Tree node and add extra helper functions here
-def Tree(): 
-   """
-   TreeNode function
-   """
-   pass
- 
+# This is the Treenode class, which has a parent, an attribute as the value, and then a dictionary
+# that contains all children associated to this node. It also has a return value.
+class TreeNode:
+    # This is used for decision trees #
+    def __init__(parent, attribute, children={}, returnVal=None):
+        parent.attribute = attribute
+        parent.children = children
+        parent.returnVal = returnVal
+    def __str__(parent):
+        return str(parent.attribute)
+
+
+# The Write node method, made instead in python.
+def writeNode(outfile, current):
+    if(current.returnVal != None):
+        outfile.print("[" + current.returnVal + "] ")
+        return
+    outfile.print(current.attribute + " ( ")
+    for ch in current.children:
+        outfile.print(ch.getKey() + " ")
+        writeNode(outfile, ch.getValue())
+    outfile.print(" ) ")
+    
+
+# Saves the loaded model to a file.
+def saveModel(modelfile, numAtts, root, atts):
+    try:
+        file = open(modelfile, "w")
+        i = 0
+        while(i < len(numAtts)):
+            file.write(atts[i+1] + " ")
+        file.write("\n")
+        writeNode(file, root)
+        file.close()
+    except:
+        print("Error writing to file ")
+        sys.exit(0)
+        
+        
 
 def DTtrain(data, model):
     """
