@@ -48,7 +48,27 @@ def DTpredict(data, model, prediction):
     1
     ...
     """
-    # implement your code here
+    infile = open(model, 'r')
+    for line in infile:
+        atts = [i for i in line.split()]
+    n = atts[0]
+    
+
+def readNode(infile):
+    #read att for node
+    n = infile[0]
+    if n[0] == '[': #build return node
+        return null #huh??????
+    #build interior node
+    node = TreeNode ##idk new TreeNode
+    val = infile[2]
+
+    index = 2
+    while val is not ")":
+        ##huh??
+        index += 1
+        val[index]
+    return node    
 
 
     pass
