@@ -20,7 +20,12 @@ import math
 import os
 
 # You may need to define the Tree node and add extra helper functions here
-
+def Tree(): 
+   """
+   TreeNode function
+   """
+   pass
+ 
 
 def DTtrain(data, model):
     """
