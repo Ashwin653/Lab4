@@ -84,7 +84,6 @@ def readFile(infile, percent, data_dict, attvalues, atts, numAtts, numClasses):
         index = 0 # for percent math
         for x in file:
             data = x.split() # parse the data for the use throughout this iteration. (data[0] is our 'dataclass')
-            
             arr = attvalues.get(atts[0]) # access the list from the first attribute in attvalues
             if(arr.count(data[0]) == 0):
                 arr.append(data[0]) # this will modify the other list in attvalues, adding the data for this first attribute
@@ -108,9 +107,7 @@ def readFile(infile, percent, data_dict, attvalues, atts, numAtts, numClasses):
             index += 1
         
         numClasses = len(data_dict.keys())
-    except :
-        print("Error reading file: " + infile)
-        sys.exit(0)
+    except Exception as e: print("Exception: " + e)
 
 
 # The Write node method, made instead in python.
@@ -135,9 +132,7 @@ def saveModel(modelfile, numAtts, root, atts):
         file.write("\n")
         writeNode(file, root)
         file.close()
-    except:
-        print("Error writing to file ")
-        sys.exit(0)
+    except Exception as e: print("Exception: " + e)
 
 
 def DTtrain(data, model):
@@ -153,12 +148,11 @@ def DTtrain(data, model):
     readFile(data, 100, data_dict, attvalues, atts, numAtts, numClasses)  # read in the data given, and prepare all fields initialize earlier for the build.
 
     # build the tree here.
-    root = TreeNode()
+    root = TreeNode(None)
     
     
     # save the model at the end for comparison.
-    saveModel(model)
-
+    saveModel(model, numAtts, root, atts)
 
 
 def DTpredict(data, model, prediction):
