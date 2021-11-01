@@ -129,7 +129,13 @@ def DTpredict(data, model, prediction):
     ...
     """
   
-  
+    readModel(model)
+    print("Model read successfully")
+    predictFromModel(data)
+    print("Predictions complete")
+    savePredictions(prediction)
+    print("Predictions saved to file: ", prediction)
+    
 def readModel(model):
     infile = open(model, 'r')
     for line in infile:
