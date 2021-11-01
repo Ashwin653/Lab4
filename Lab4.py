@@ -33,7 +33,18 @@ class TreeNode:
 
 def log2(x):
     if(x == 0): return 0
-    return math.log(x)/math.log(2)      
+    return math.log(x)/math.log(2)  
+  
+  
+def entropy(classCounts):
+    total = 0
+    for i in classCounts:
+        total += i
+
+    sum = 0
+    for j in classCounts:
+        sum -= (classCounts[i] / total) * log2(classCounts[i] / total)
+    return sum
 
 
 def DTtrain(data, model):
