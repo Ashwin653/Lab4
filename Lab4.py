@@ -67,11 +67,8 @@ def partitionEntropy(partition):
    
 # readfile is a helper method that will store our data from the provided
 # data set and get it ready to use to build the tree.
-def readFile(infile, percent):
-    pass
-    try: 
-        # initialize a dictionary for storing data
-        data_dict = {}
+def readFile(infile, percent, data_dict, attvalues, atts, numAtts, numClasses):
+    try:
         # open the training data file
         file = open(infile, "r")
         # read the attributes from the first line of the file
@@ -79,41 +76,88 @@ def readFile(infile, percent):
         atts = attline.split("|")
         numAtts = len(atts)-1
         
-        # initialize the dictionary of attribute values
-        attvalues = {}
+        # this fills the list designated for the values associated with the attributes
         for a in atts:
             attvalues[a] = {}
             
         # read data into dictionary
+        index = 0 # for percent math
         for x in file:
-            dataclass = x # read in classification for data
+            data = x.split() # parse the data for the use throughout this iteration. (data[0] is our 'dataclass')
             
-            # come back to this, its attempting to do something that I don't really understand looking at the data files we
-            # are using. where is a classification that isn't the attributes we got earlier?
+            arr = attvalues.get(atts[0]) # access the list from the first attribute in attvalues
+            if(arr.count(data[0]) == 0):
+                arr.append(data[0]) # this will modify the other list in attvalues, adding the data for this first attribute
             
-            arr = attvalues.get(atts[0])
-            if(arr.count(dataclass) == 0):
-                arr.append(dataclass)
-            
-            if dataclass not in data_dict:
-                data_dict[dataclass] = {}
-            a = data_dict.get(dataclass)
-            datapoint = {}
-            
-            val = x.split() # parsing the current line for easy access.
-            for i in numAtts: # for each attribute
-                pass
+            if data[0] not in data_dict: # modifying the data_dict so that all outcomes of the first attribute are seperated and have their own outcomes.
+                data_dict[data[0]] = {}
+                    
+            a = data_dict.get(data[0]) # retrieving the list we made just above
+            datapoint = list() # another list for [figure out what this is doing]
+            for i in range(numAtts):
+                if(i == 0): # skips the first value as we don't need it here
+                    continue
+                val = data[i] # retrieve the next value
+                datapoint.append(val) # put data point into data map
+                arr = attvalues.get(atts[i])
+                if val not in arr:
+                    arr.append(val)
+            # only add data point to the dictionary 'percent' of the time.
+            if(index%100 < percent):
+                a.append(datapoint)
+            index += 1
+        
+        numClasses = len(data_dict.keys())
+    except :
+        print("Error reading file: " + infile)
+        sys.exit(0)
+
+
+# The Write node method, made instead in python.
+def writeNode(outfile, current):
+    if(current.returnVal != None):
+        outfile.print("[" + current.returnVal + "] ")
+        return
+    outfile.print(current.attribute + " ( ")
+    for ch in current.children:
+        outfile.print(ch.getKey() + " ")
+        writeNode(outfile, ch.getValue())
+    outfile.print(" ) ")
+    
+
+# Saves the loaded model to a file.
+def saveModel(modelfile, numAtts, root, atts):
+    try:
+        file = open(modelfile, "w")
+        i = 0
+        while(i < len(numAtts)):
+            file.write(atts[i+1] + " ")
+        file.write("\n")
+        writeNode(file, root)
+        file.close()
     except:
-        pass
-     
+        print("Error writing to file ")
+        sys.exit(0)
+
 
 def DTtrain(data, model):
     """
-    This is the function for training a decision tree model
+    This is the function for training a decision tree model, or more importantly, DTtrain will be the one
+    building the tree, and calling all the helper methods after being given the critical info from the main.
     """
-    # implement your code here
+    data_dict = {}  # initialize a dictionary for storing data
+    attvalues = {}  # initialize the dictionary of attribute values
+    atts = list()       # initialize atts list
+    numAtts = -1    # initialize the numAtts int
+    numClasses = -1 # initialize the numClasses int
+    readFile(data, 100, data_dict, attvalues, atts, numAtts, numClasses)  # read in the data given, and prepare all fields initialize earlier for the build.
 
-    pass
+    # build the tree here.
+    root = TreeNode()
+    
+    
+    # save the model at the end for comparison.
+    saveModel(model)
 
 
 
@@ -158,6 +202,7 @@ def readNode(infile):
         val[index]
     return node
 
+   
 def predictFromModel(data):
     try:
         s = open(data, 'r')
@@ -172,6 +217,7 @@ def predictFromModel(data):
     except:
         print("test file has error")
 
+      
 def traceTree(node, data):
     if node.returnVal != null:
         return node.returnVal
@@ -180,6 +226,7 @@ def traceTree(node, data):
     t = node.children.get(val)
     return traceTree(t, data)
 
+   
 def savePredictions(output):
     try:
         outfile = open(output, 'w')
@@ -213,34 +260,7 @@ def EvaDT(predictionLabel, realLabel, output):
     result = "In total, there are "+str(length)+" predictions. "+str(correct)+" are correct and "+ str(incorrect) + " are incorrect. The percentage is "+str(Rate)
     with open(output, "w") as fh:
         fh.write(result)
-
-      
-# The Write node method, made instead in python.
-def writeNode(outfile, current):
-    if(current.returnVal != None):
-        outfile.print("[" + current.returnVal + "] ")
-        return
-    outfile.print(current.attribute + " ( ")
-    for ch in current.children:
-        outfile.print(ch.getKey() + " ")
-        writeNode(outfile, ch.getValue())
-    outfile.print(" ) ")
-    
-
-# Saves the loaded model to a file.
-def saveModel(modelfile, numAtts, root, atts):
-    try:
-        file = open(modelfile, "w")
-        i = 0
-        while(i < len(numAtts)):
-            file.write(atts[i+1] + " ")
-        file.write("\n")
-        writeNode(file, root)
-        file.close()
-    except:
-        print("Error writing to file ")
-        sys.exit(0)
-
+       
        
 def main():
     options = parser.parse_args()
