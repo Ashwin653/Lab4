@@ -102,9 +102,10 @@ def readFile(infile, percent):
             
             val = x.split() # parsing the current line for easy access.
             for i in numAtts: # for each attribute
-               pass
-            pass
-
+                pass
+    except:
+        pass
+     
 
 def DTtrain(data, model):
     """
