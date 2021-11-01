@@ -31,20 +31,79 @@ class TreeNode:
     def __str__(parent):
         return str(parent.attribute)
 
+# this is function acts as a log base 2.
 def log2(x):
     if(x == 0): return 0
-    return math.log(x)/math.log(2)  
-  
-  
-def entropy(classCounts):
-    total = 0
-    for i in classCounts:
-        total += i
+    return math.log(x)/math.log(2)
 
-    sum = 0
-    for j in classCounts:
-        sum -= (classCounts[i] / total) * log2(classCounts[i] / total)
-    return sum
+# utilizes the log2 function to calculate the entropy of the chosen classCount, which is an integer array.
+def entropy(classCounts):
+    total = 0.0
+    for i in classCounts:
+      total += i
+    
+    sum1, i = 0.0, 0
+    while (i < len(classCounts)):
+        sum1 -= (classCounts[i]/total)*log2(classCounts[i]/total)
+        i += 1
+    return sum1
+
+
+# Uses the entropy method and a partition of data to supply again, the entropy of the
+# provided data.
+def partitionEntropy(partition):
+    totalEnt, total, i = 0, 0, 0
+    
+    while (i < len(partition)):
+        n, j = 0, 0
+        while (j < len(partition[0])):
+            n += partition[i][j]
+            total += partition[i][j]
+            j += 1
+        totalEnt += n * entropy(partition[i])
+        i += 1
+    return totalEnt/total
+
+   
+# readfile is a helper method that will store our data from the provided
+# data set and get it ready to use to build the tree.
+def readFile(infile, percent):
+    pass
+    try: 
+        # initialize a dictionary for storing data
+        data_dict = {}
+        # open the training data file
+        file = open(infile, "r")
+        # read the attributes from the first line of the file
+        attline = file.readline()
+        atts = attline.split("|")
+        numAtts = len(atts)-1
+        
+        # initialize the dictionary of attribute values
+        attvalues = {}
+        for a in atts:
+            attvalues[a] = {}
+            
+        # read data into dictionary
+        for x in file:
+            dataclass = x # read in classification for data
+            
+            # come back to this, its attempting to do something that I don't really understand looking at the data files we
+            # are using. where is a classification that isn't the attributes we got earlier?
+            
+            arr = attvalues.get(atts[0])
+            if(arr.count(dataclass) == 0):
+                arr.append(dataclass)
+            
+            if dataclass not in data_dict:
+                data_dict[dataclass] = {}
+            a = data_dict.get(dataclass)
+            datapoint = {}
+            
+            val = x.split() # parsing the current line for easy access.
+            for i in numAtts: # for each attribute
+               pass
+            pass
 
 
 def DTtrain(data, model):
@@ -68,6 +127,8 @@ def DTpredict(data, model, prediction):
     1
     ...
     """
+  
+  
 def readModel(model):
     infile = open(model, 'r')
     for line in infile:
@@ -146,6 +207,7 @@ def EvaDT(predictionLabel, realLabel, output):
     with open(output, "w") as fh:
         fh.write(result)
 
+      
 # The Write node method, made instead in python.
 def writeNode(outfile, current):
     if(current.returnVal != None):
@@ -172,6 +234,7 @@ def saveModel(modelfile, numAtts, root, atts):
         print("Error writing to file ")
         sys.exit(0)
 
+       
 def main():
     options = parser.parse_args()
     mode = options.mode       # first get the mode
