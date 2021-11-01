@@ -84,7 +84,7 @@ def readNode(infile):
     val = infile[2]
 
     index = 2
-    while val is not ")":
+    while val != ")":
         node.children.put(val, readNode(infile))
         index += 1
         val[index]
@@ -105,7 +105,7 @@ def predictFromModel(data):
         print("test file has error")
 
 def traceTree(node, data):
-    if node.returnVal is not null:
+    if node.returnVal != null:
         return node.returnVal
     att = node.attribute
     val = data.get(attArr.index(att))
