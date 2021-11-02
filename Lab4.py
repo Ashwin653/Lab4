@@ -64,51 +64,6 @@ def partitionEntropy(partition):
         i += 1
     return totalEnt/total
 
-   
-# readfile is a helper method that will store our data from the provided
-# data set and get it ready to use to build the tree.
-def readFile(infile, percent, data_dict, attvalues, atts, numAtts, numClasses):
-    try:
-        # open the training data file
-        file = open(infile, "r")
-        # read the attributes from the first line of the file
-        attline = file.readline()
-        atts = attline.split("|")
-        numAtts = len(atts)-1
-        
-        # this fills the list designated for the values associated with the attributes
-        for a in atts:
-            attvalues[a] = {}
-            
-        # read data into dictionary
-        index = 0 # for percent math
-        for x in file:
-            data = x.split() # parse the data for the use throughout this iteration. (data[0] is our 'dataclass')
-            arr = attvalues.get(atts[0]) # access the list from the first attribute in attvalues
-            if(arr.count(data[0]) == 0):
-                arr.append(data[0]) # this will modify the other list in attvalues, adding the data for this first attribute
-            
-            if data[0] not in data_dict: # modifying the data_dict so that all outcomes of the first attribute are seperated and have their own outcomes.
-                data_dict[data[0]] = {}
-                    
-            a = data_dict.get(data[0]) # retrieving the list we made just above
-            datapoint = list() # another list for [figure out what this is doing]
-            for i in range(numAtts):
-                if(i == 0): # skips the first value as we don't need it here
-                    continue
-                val = data[i] # retrieve the next value
-                datapoint.append(val) # put data point into data map
-                arr = attvalues.get(atts[i])
-                if val not in arr:
-                    arr.append(val)
-            # only add data point to the dictionary 'percent' of the time.
-            if(index%100 < percent):
-                a.append(datapoint)
-            index += 1
-        
-        numClasses = len(data_dict.keys())
-    except Exception as e: print("Exception: " + e)
-
 
 # The Write node method, made instead in python.
 def writeNode(outfile, current):
@@ -119,8 +74,9 @@ def writeNode(outfile, current):
         if(current.attribute is not None):
             f.write(current.attribute + " ( ")
         for ch in current.children:
-            f.write(ch.getKey() + " ")
-            writeNode(outfile, ch.getValue())
+            print(ch)
+            f.write(ch + " ")
+            writeNode(outfile, current.children[ch])
         f.write(" ) ")
     
 
@@ -211,7 +167,49 @@ def DTtrain(data, model):
     atts = list()       # initialize atts list
     numAtts = -1    # initialize the numAtts int
     numClasses = -1 # initialize the numClasses int
-    readFile(data, 100, data_dict, attValues, atts, numAtts, numClasses)  # read in the data given, and prepare all fields initialize earlier for the build.
+    
+    # read in the data given, and prepare all fields initialize earlier for the build.
+    try:
+        # open the training data file
+        file = open(data, "r")
+        # read the attributes from the first line of the file
+        attline = file.readline()
+        atts = attline.split("|")
+        numAtts = len(atts)-1
+        
+        # this fills the list designated for the values associated with the attributes
+        for a in atts:
+            attValues[a] = list()
+            
+        # read data into dictionary
+        index = 0 # for percent math
+        for x in file:
+            data = x.split() # parse the data for the use throughout this iteration. (data[0] is our 'dataclass')
+            arr = attValues.get(atts[0]) # access the list from the first attribute in attvalues
+            if(arr.count(data[0]) == 0):
+                arr.append(data[0]) # this will modify the other list in attvalues, adding the data for this first attribute
+            
+            if data[0] not in data_dict: # modifying the data_dict so that all outcomes of the first attribute are seperated and have their own outcomes.
+                data_dict[data[0]] = list()
+                    
+            a = data_dict.get(data[0]) # retrieving the list we made just above
+            datapoint = list() # another list for [figure out what this is doing]
+            for i in range(numAtts):
+                if(i == 0): # skips the first value as we don't need it here
+                    continue
+                val = data[i] # retrieve the next value
+                datapoint.append(val) # put data point into data map
+                arr = attValues.get(atts[i])
+                if val not in arr:
+                    arr.append(val)
+            # only add data point to the dictionary 'percent' of the time.
+            if(index%100 < 100):
+                a.append(datapoint)
+            index += 1
+        
+        numClasses = len(data_dict.keys())
+    except Exception as e: print("Exception: " + e)
+        
 
     # build the tree here.
     root = TreeNode(None)
