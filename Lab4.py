@@ -138,9 +138,67 @@ def saveModel(modelfile, numAtts, root, atts):
 
 
 # this is the method that will help with the recursive process of building the tree.
-def buildTreeNode(parent, currFreeAtts, nodeData, numAtts, attvalues, numClasses, atts):
-    # implement the java method to python here.
-    pass
+def buildTreeNode(parent, currFreeAtts, nodeData, numAtts, attValues, numClasses, atts):
+    # build the current tree node
+    curr = TreeNode(parent)
+    
+    minEnt = 1 
+    minAtt = None
+    # calculate the current entropy for each attribute
+    print(numAtts)
+    for i in range(numAtts): # for each attribute
+        att = currFreeAtts[i] # get the attribute
+        if att is not None: # if the attribute hasn't already been used in the tree
+            vals = attValues[att] # get the list of possible values for each attribute
+            print("hello")
+            partition = [len(vals)][numClasses] # store class counts for each outcome
+            for j in numClasses: # for each classification
+                outcome = attValues.get(atts[0])[j]
+                print(outcome + "hello")
+                l = nodeData.get(outcome)
+                for l2 in l:
+                    partition[vals[l2[i]]][j] += 1
+            # calculate entropy
+            ent = partitionEntropy(partition)
+            #print(att + ent)
+            if(ent < minEnt):
+                minEnt, minAtt = ent, att
+    print("hello")
+    # if we are at the base of the tree
+    if(minAtt is None):
+        maxVal = 0
+        maxClass = "undefined"
+        for j in range(numClasses): # for each classification
+            outcome = attValues.get(atts[0])[j]
+            if(len(nodeData.get(outcome)) >= maxVal):
+                maxVal = len(nodeData.get(outcome))
+                maxClass = outcome
+        #print(maxClass)
+        curr.returnVal = maxClass
+        return curr
+    
+    #print(minAtt)
+    # find the best attribute
+    curr.attribute = minAtt
+    attIndex = currFreeAtts[minAtt]
+    currFreeAtts[attIndex] = None
+    
+    # build child nodes
+    for v in attValues.get(minAtt):
+        temp_dict = {}
+        for j in range(numClasses):
+            outcome = attValues.get(atts[0])[j]
+            trimList = list()
+            l = nodeData.get(outcome)
+            for l2 in l:
+                if(l2[attIndex] == v):
+                    trimList.append(l2)
+            temp_dict[outcome] = trimList
+        print(v + "---> ")
+        curr.children[v] = buildTreeNode(curr, currFreeAtts, temp_dict, numAtts, attValues, numClasses, atts)
+    # return the built node
+    currFreeAtts[attIndex] = minAtt
+    return curr
 
 
 def DTtrain(data, model):
