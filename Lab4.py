@@ -112,14 +112,16 @@ def readFile(infile, percent, data_dict, attvalues, atts, numAtts, numClasses):
 
 # The Write node method, made instead in python.
 def writeNode(outfile, current):
-    if(current.returnVal != None):
-        outfile.print("[" + current.returnVal + "] ")
-        return
-    outfile.print(current.attribute + " ( ")
-    for ch in current.children:
-        outfile.print(ch.getKey() + " ")
-        writeNode(outfile, ch.getValue())
-    outfile.print(" ) ")
+    with open(outfile, "w") as f:
+        if(current.returnVal is not None):
+            f.write("[" + current.returnVal + "] ")
+            return
+        if(current.attribute is not None):
+            f.write(current.attribute + " ( ")
+        for ch in current.children:
+            f.write(ch.getKey() + " ")
+            writeNode(outfile, ch.getValue())
+        f.write(" ) ")
     
 
 # Saves the loaded model to a file.
@@ -127,12 +129,18 @@ def saveModel(modelfile, numAtts, root, atts):
     try:
         file = open(modelfile, "w")
         i = 0
-        while(i < len(numAtts)):
+        while(i < numAtts):
             file.write(atts[i+1] + " ")
         file.write("\n")
-        writeNode(file, root)
         file.close()
+        writeNode(modelfile, root)
     except Exception as e: print("Exception: " + e)
+
+
+# this is the method that will help with the recursive process of building the tree.
+def buildTreeNode():
+    # implement the java method to python here.
+    pass
 
 
 def DTtrain(data, model):
@@ -149,6 +157,8 @@ def DTtrain(data, model):
 
     # build the tree here.
     root = TreeNode(None)
+    
+    # this is where buildTree() will be.
     
     
     # save the model at the end for comparison.
