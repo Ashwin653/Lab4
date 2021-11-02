@@ -138,7 +138,7 @@ def saveModel(modelfile, numAtts, root, atts):
 
 
 # this is the method that will help with the recursive process of building the tree.
-def buildTreeNode():
+def buildTreeNode(parent, currFreeAtts, nodeData, numAtts, attvalues, numClasses, atts):
     # implement the java method to python here.
     pass
 
@@ -149,17 +149,20 @@ def DTtrain(data, model):
     building the tree, and calling all the helper methods after being given the critical info from the main.
     """
     data_dict = {}  # initialize a dictionary for storing data
-    attvalues = {}  # initialize the dictionary of attribute values
+    attValues = {}  # initialize the dictionary of attribute values
     atts = list()       # initialize atts list
     numAtts = -1    # initialize the numAtts int
     numClasses = -1 # initialize the numClasses int
-    readFile(data, 100, data_dict, attvalues, atts, numAtts, numClasses)  # read in the data given, and prepare all fields initialize earlier for the build.
+    readFile(data, 100, data_dict, attValues, atts, numAtts, numClasses)  # read in the data given, and prepare all fields initialize earlier for the build.
 
     # build the tree here.
     root = TreeNode(None)
-    
-    # this is where buildTree() will be.
-    
+    currFreeAtts = list()
+    i = 0
+    while(i < numAtts):
+        currFreeAtts.append(atts[i+1])
+        i += 1
+    root = buildTreeNode(None, currFreeAtts, data_dict, numAtts, attValues, numClasses, atts)
     
     # save the model at the end for comparison.
     saveModel(model, numAtts, root, atts)
