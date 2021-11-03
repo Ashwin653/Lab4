@@ -23,12 +23,10 @@ import math
 # that contains all children associated to this node. It also has a return value.
 class TreeNode:
     # This is used for decision trees #
-    def __init__(parent, attribute, children={}, returnVal=None):
-        parent.attribute = attribute
-        parent.children = children
-        parent.returnVal = returnVal
-    def __str__(parent):
-        return str(parent.attribute)
+    def __init__(self, attribute, children={}, returnVal=None):
+        self.attribute = attribute
+        self.children = children
+        self.returnVal = returnVal
     
 class DTTrainCL:
     # This is used to allow all the data for the DTTrain method to be changed if needed
@@ -81,22 +79,20 @@ def writeNode(outfile, current):
             f.write("[" + current.returnVal + "] ")
             return
         f.write(current.attribute + " ( ")
-        for ch in current.children:
-            f.write(ch + " ")
-            print(current.children[ch])
-            writeNode(outfile, current.children[ch])
+        for key, value in current.children.items():
+            f.write(key + " ")
+            #print(value)
+            writeNode(outfile, value)
         f.write(" ) ")
     
     
-# THE WRITE NODE METHOD IS WRONG, ITS NOT MOVING THE RIGHT DATA
-    
 # Saves the loaded model to a file.
-def saveModel(modelfile, root, dttrain):
+def saveModel(modelfile, root, dtt):
     try:
         file = open(modelfile, "w")
         i = 0
-        while(i < dttrain.numAtts-1):
-            file.write(dttrain.atts[i+1] + " ")
+        while(i < dtt.numAtts-1):
+            file.write(dtt.atts[i+1] + " ")
             i += 1
         file.write("\n")
         writeNode(modelfile, root)
@@ -227,6 +223,7 @@ def DTtrain(data, model):
         currFreeAtts.append(dtt.atts[i+1])
         i += 1
     root = buildTreeNode(None, currFreeAtts, dtt)
+    
     # save the model at the end for comparison.
     saveModel(model, root, dtt)
 
