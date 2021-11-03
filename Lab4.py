@@ -6,7 +6,7 @@
  Instructor: Dr. Cao
  Date: 10/26/21
 
- Sources consulted: N/A
+ Sources consulted: StackOverFlow, Dr.Cao
  Known Bugs: N/A
  Creativity: N/A
 
@@ -18,7 +18,6 @@
 import sys
 import argparse
 import math
-import os
 
 # This is the Treenode class, which has a parent, an attribute as the value, and then a dictionary
 # that contains all children associated to this node. It also has a return value.
@@ -30,6 +29,16 @@ class TreeNode:
         parent.returnVal = returnVal
     def __str__(parent):
         return str(parent.attribute)
+    
+class DTTrainCL:
+    # This is used to allow all the data for the DTTrain method to be changed if needed
+    data_dict = {}  # initialize a dictionary for storing data
+    attValues = {}  # initialize the dictionary of attribute values
+    atts = list()       # initialize atts list
+    numAtts = -1    # initialize the numAtts int
+    numClasses = -1 # initialize the numClasses int
+    def __init__(self):
+        self = self
 
 # this is function acts as a log base 2.
 def log2(x):
@@ -71,87 +80,129 @@ def writeNode(outfile, current):
         if(current.returnVal is not None):
             f.write("[" + current.returnVal + "] ")
             return
-        if(current.attribute is not None):
-            f.write(current.attribute + " ( ")
+        f.write(current.attribute + " ( ")
         for ch in current.children:
-            print(ch)
             f.write(ch + " ")
+            print(current.children[ch])
             writeNode(outfile, current.children[ch])
         f.write(" ) ")
     
-
+    
+# THE WRITE NODE METHOD IS WRONG, ITS NOT MOVING THE RIGHT DATA
+    
 # Saves the loaded model to a file.
-def saveModel(modelfile, numAtts, root, atts):
+def saveModel(modelfile, root, dttrain):
     try:
         file = open(modelfile, "w")
         i = 0
-        while(i < numAtts):
-            file.write(atts[i+1] + " ")
+        while(i < dttrain.numAtts-1):
+            file.write(dttrain.atts[i+1] + " ")
+            i += 1
         file.write("\n")
-        file.close()
         writeNode(modelfile, root)
-    except Exception as e: print("Exception: " + e)
+        file.close()
+    except Exception as e: print(e)
 
+# effectively will read in all the data in the file and parse it into a usable format for the rest of the code.
+def readFile(data, dtt):
+    try:
+        # open the training data file
+        file = open(data, "r")
+        # read the attributes from the first line of the file
+        attline = file.readline()
+        dtt.atts = attline.split("|")
+        dtt.numAtts = len(dtt.atts)
+        
+        # this fills the list designated for the values associated with the attributes
+        for a in dtt.atts:
+            dtt.attValues[a] = list()
+            
+        # read data into dictionary
+        index = 0 # for percent math
+        for x in file:
+            data = x.split() # parse the data for the use throughout this iteration. (data[0] is our 'dataclass')
+            arr = dtt.attValues.get(dtt.atts[0]) # access the list from the first attribute in attvalues
+            if(arr.count(data[0]) == 0):
+                arr.append(data[0]) # this will modify the other list in attvalues, adding the data for this first attribute
+            
+            if data[0] not in dtt.data_dict: # modifying the data_dict so that all outcomes of the first attribute are seperated and have their own outcomes.
+                dtt.data_dict[data[0]] = list()
+                    
+            a = dtt.data_dict.get(data[0]) # retrieving the list we made just above
+            datapoint = list() # another list for [figure out what this is doing]
+            for i in range(dtt.numAtts):
+                if(i == 0): # skips the first value as we don't need it here
+                    continue
+                val = data[i] # retrieve the next value
+                datapoint.append(val) # put data point into data map
+                arr = dtt.attValues.get(dtt.atts[i])
+                if val not in arr:
+                    arr.append(val)
+            # only add data point to the dictionary 'percent' of the time.
+            if(index%100 < 100):
+                a.append(datapoint)
+            index += 1
+        
+        dtt.numClasses = len(dtt.data_dict.keys())
+    except Exception as e: print(e)
 
 # this is the method that will help with the recursive process of building the tree.
-def buildTreeNode(parent, currFreeAtts, nodeData, numAtts, attValues, numClasses, atts):
+def buildTreeNode(parent, currFreeAtts, dtt):
     # build the current tree node
     curr = TreeNode(parent)
     
     minEnt = 1 
     minAtt = None
     # calculate the current entropy for each attribute
-    print(numAtts)
-    for i in range(numAtts): # for each attribute
+    for i in range(dtt.numAtts-1): # for each attribute
         att = currFreeAtts[i] # get the attribute
         if att is not None: # if the attribute hasn't already been used in the tree
-            vals = attValues[att] # get the list of possible values for each attribute
-            print("hello")
-            partition = [len(vals)][numClasses] # store class counts for each outcome
-            for j in numClasses: # for each classification
-                outcome = attValues.get(atts[0])[j]
-                print(outcome + "hello")
-                l = nodeData.get(outcome)
+            vals = dtt.attValues[att] # get the list of possible values for each attribute
+            rows, columns = len(vals), dtt.numClasses
+            partition = [[0 for x in range(columns)] for y in range(rows)] # store class counts for each outcome
+            for j in range(dtt.numClasses): # for each classification
+                outcome = dtt.attValues.get(dtt.atts[0])[j]
+                # print(outcome)
+                l = dtt.data_dict.get(outcome)
                 for l2 in l:
-                    partition[vals[l2[i]]][j] += 1
+                    #print(len(l2), i, dtt.numAtts)
+                    x = vals.index(l2[i])
+                    partition[x][j] += 1
             # calculate entropy
             ent = partitionEntropy(partition)
             #print(att + ent)
             if(ent < minEnt):
                 minEnt, minAtt = ent, att
-    print("hello")
     # if we are at the base of the tree
     if(minAtt is None):
         maxVal = 0
         maxClass = "undefined"
-        for j in range(numClasses): # for each classification
-            outcome = attValues.get(atts[0])[j]
-            if(len(nodeData.get(outcome)) >= maxVal):
-                maxVal = len(nodeData.get(outcome))
+        for j in range(dtt.numClasses): # for each classification
+            outcome = dtt.attValues.get(dtt.atts[0])[j]
+            if(len(dtt.data_dict.get(outcome)) >= maxVal):
+                maxVal = len(dtt.data_dict.get(outcome))
                 maxClass = outcome
         #print(maxClass)
         curr.returnVal = maxClass
         return curr
-    
-    #print(minAtt)
     # find the best attribute
     curr.attribute = minAtt
-    attIndex = currFreeAtts[minAtt]
+    attIndex = currFreeAtts.index(minAtt)
     currFreeAtts[attIndex] = None
     
     # build child nodes
-    for v in attValues.get(minAtt):
+    for v in dtt.attValues.get(minAtt):
         temp_dict = {}
-        for j in range(numClasses):
-            outcome = attValues.get(atts[0])[j]
+        for j in range(dtt.numClasses):
+            outcome = dtt.attValues.get(dtt.atts[0])[j]
             trimList = list()
-            l = nodeData.get(outcome)
+            l = dtt.data_dict.get(outcome)
             for l2 in l:
                 if(l2[attIndex] == v):
                     trimList.append(l2)
             temp_dict[outcome] = trimList
-        print(v + "---> ")
-        curr.children[v] = buildTreeNode(curr, currFreeAtts, temp_dict, numAtts, attValues, numClasses, atts)
+        #print(v + "---> ")
+        curr.children[v] = buildTreeNode(curr, currFreeAtts, dtt)
     # return the built node
     currFreeAtts[attIndex] = minAtt
     return curr
@@ -162,66 +213,22 @@ def DTtrain(data, model):
     This is the function for training a decision tree model, or more importantly, DTtrain will be the one
     building the tree, and calling all the helper methods after being given the critical info from the main.
     """
-    data_dict = {}  # initialize a dictionary for storing data
-    attValues = {}  # initialize the dictionary of attribute values
-    atts = list()       # initialize atts list
-    numAtts = -1    # initialize the numAtts int
-    numClasses = -1 # initialize the numClasses int
-    
-    # read in the data given, and prepare all fields initialize earlier for the build.
-    try:
-        # open the training data file
-        file = open(data, "r")
-        # read the attributes from the first line of the file
-        attline = file.readline()
-        atts = attline.split("|")
-        numAtts = len(atts)-1
-        
-        # this fills the list designated for the values associated with the attributes
-        for a in atts:
-            attValues[a] = list()
-            
-        # read data into dictionary
-        index = 0 # for percent math
-        for x in file:
-            data = x.split() # parse the data for the use throughout this iteration. (data[0] is our 'dataclass')
-            arr = attValues.get(atts[0]) # access the list from the first attribute in attvalues
-            if(arr.count(data[0]) == 0):
-                arr.append(data[0]) # this will modify the other list in attvalues, adding the data for this first attribute
-            
-            if data[0] not in data_dict: # modifying the data_dict so that all outcomes of the first attribute are seperated and have their own outcomes.
-                data_dict[data[0]] = list()
-                    
-            a = data_dict.get(data[0]) # retrieving the list we made just above
-            datapoint = list() # another list for [figure out what this is doing]
-            for i in range(numAtts):
-                if(i == 0): # skips the first value as we don't need it here
-                    continue
-                val = data[i] # retrieve the next value
-                datapoint.append(val) # put data point into data map
-                arr = attValues.get(atts[i])
-                if val not in arr:
-                    arr.append(val)
-            # only add data point to the dictionary 'percent' of the time.
-            if(index%100 < 100):
-                a.append(datapoint)
-            index += 1
-        
-        numClasses = len(data_dict.keys())
-    except Exception as e: print("Exception: " + e)
-        
+    # initialize all the values needed for the DTTrain process
+    dtt = DTTrainCL()
 
+    # read the file here
+    readFile(data, dtt)
+    
     # build the tree here.
     root = TreeNode(None)
     currFreeAtts = list()
     i = 0
-    while(i < numAtts):
-        currFreeAtts.append(atts[i+1])
+    while(i < dtt.numAtts-1):
+        currFreeAtts.append(dtt.atts[i+1])
         i += 1
-    root = buildTreeNode(None, currFreeAtts, data_dict, numAtts, attValues, numClasses, atts)
-    
+    root = buildTreeNode(None, currFreeAtts, dtt)
     # save the model at the end for comparison.
-    saveModel(model, numAtts, root, atts)
+    saveModel(model, root, dtt)
 
 
 def DTpredict(data, model, prediction):
