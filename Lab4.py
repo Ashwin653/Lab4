@@ -5,14 +5,17 @@
  Semester: Fall 2021
  Instructor: Dr. Cao
  Date: 10/26/21
-
  Sources consulted: StackOverFlow, Dr.Cao
- Known Bugs: N/A
+ 
+ Known Bugs: Program will run to a max recursion depth, causing itself to crash due to the method WriteNode.
+ A similar issue happens in buildtreenode, but it does not cause a crash, rather, it causes a much
+ longer running time.
+ 
  Creativity: N/A
 
- Instructions: After a lot of practice in Python, in this lab, you are going to design the program
- for decision tree and implement it from scrath! Don't be panic, you still have some reference, 
- actually you are going to translate the JAVA code to Python! The format should be similar to Lab 2!
+ Instructions: Unfortunately, there is no real way to run this program without it ultimately crashing.
+ The formatting we chose is organized, but somewhere there was a fatal mistake made in either
+ the readfile, or buildtreenode method that prevents the code from ever fully running.
 
 """
 import sys
@@ -37,6 +40,16 @@ class DTTrainCL:
     numClasses = -1 # initialize the numClasses int
     def __init__(self):
         self = self
+        
+class DTPredictCL:
+    # This is used to allow all the data for the DTPredict method to be changed if needed
+    attArr = list()
+    root = TreeNode(None)
+    predictions = list()
+    def __init__(self):
+        self = self
+
+
 
 # this is function acts as a log base 2.
 def log2(x):
@@ -51,7 +64,7 @@ def entropy(classCounts):
     
     sum1, i = 0.0, 0
     while (i < len(classCounts)):
-        sum1 -= (classCounts[i]/total)*log2(classCounts[i]/total)
+        sum1 -= (classCounts[i]/(total + 0.000000001))*log2(classCounts[i]/(total + 0.000000001))
         i += 1
     return sum1
 
@@ -69,7 +82,7 @@ def partitionEntropy(partition):
             j += 1
         totalEnt += n * entropy(partition[i])
         i += 1
-    return totalEnt/total
+    return totalEnt/(total + 0.000000001)
 
 
 # The Write node method, made instead in python.
@@ -143,7 +156,10 @@ def readFile(data, dtt):
     except Exception as e: print(e)
 
 # this is the method that will help with the recursive process of building the tree.
-def buildTreeNode(parent, currFreeAtts, dtt):
+def buildTreeNode(parent, currFreeAtts, dtt, nodeData, i):
+    if(len(nodeData) == 0):
+        nodeData = dtt.data_dict
+    
     # build the current tree node
     curr = TreeNode(parent)
     
@@ -159,7 +175,7 @@ def buildTreeNode(parent, currFreeAtts, dtt):
             for j in range(dtt.numClasses): # for each classification
                 outcome = dtt.attValues.get(dtt.atts[0])[j]
                 # print(outcome)
-                l = dtt.data_dict.get(outcome)
+                l = nodeData.get(outcome)
                 for l2 in l:
                     #print(len(l2), i, dtt.numAtts)
                     x = vals.index(l2[i])
@@ -175,8 +191,8 @@ def buildTreeNode(parent, currFreeAtts, dtt):
         maxClass = "undefined"
         for j in range(dtt.numClasses): # for each classification
             outcome = dtt.attValues.get(dtt.atts[0])[j]
-            if(len(dtt.data_dict.get(outcome)) >= maxVal):
-                maxVal = len(dtt.data_dict.get(outcome))
+            if(len(nodeData.get(outcome)) >= maxVal):
+                maxVal = len(nodeData.get(outcome))
                 maxClass = outcome
         #print(maxClass)
         curr.returnVal = maxClass
@@ -192,13 +208,15 @@ def buildTreeNode(parent, currFreeAtts, dtt):
         for j in range(dtt.numClasses):
             outcome = dtt.attValues.get(dtt.atts[0])[j]
             trimList = list()
-            l = dtt.data_dict.get(outcome)
+            l = nodeData.get(outcome)
             for l2 in l:
                 if(l2[attIndex] == v):
                     trimList.append(l2)
             temp_dict[outcome] = trimList
-        #print(v + "---> ")
-        curr.children[v] = buildTreeNode(curr, currFreeAtts, dtt)
+        print(v + "---> ")
+        #print(i, "----- This is an issue")
+        #i += 1
+        curr.children[v] = buildTreeNode(curr, currFreeAtts, dtt, temp_dict, i)
     # return the built node
     currFreeAtts[attIndex] = minAtt
     return curr
@@ -222,7 +240,10 @@ def DTtrain(data, model):
     while(i < dtt.numAtts-1):
         currFreeAtts.append(dtt.atts[i+1])
         i += 1
-    root = buildTreeNode(None, currFreeAtts, dtt)
+        
+    i = 0
+    nodeData = {}
+    root = buildTreeNode(None, currFreeAtts, dtt, nodeData, i)
     
     # save the model at the end for comparison.
     saveModel(model, root, dtt)
@@ -239,65 +260,66 @@ def DTpredict(data, model, prediction):
     1
     ...
     """
-  
-    readModel(model)
+    dtp = DTPredictCL()
+    
+    readModel(model, dtp)
     print("Model read successfully")
-    predictFromModel(data)
+    predictFromModel(data, dtp)
     print("Predictions complete")
-    savePredictions(prediction)
+    savePredictions(prediction, dtp)
     print("Predictions saved to file: ", prediction)
     
-def readModel(model):
+def readModel(model, dtp):
     infile = open(model, 'r')
     for line in infile:
-        atts = [i for i in line.split()]
-    root = readNode(atts)
+        dtp.attArr = [i for i in line.split()]
+    dtp.root = readNode(dtp.attArr)
 
-def readNode(infile):
-    #read att for node
-    n = infile[0]
-    if n[0] == '[': #build return node
-        return TreeNode(null, null, n.substring(1, len(n) - 1))
-    #build interior node
-    node = TreeNode(n, {}, null)
-    val = infile[2]
+def readNode(atts):
+    # read att for node
+    n = atts[0]
+    if n[0] == '[': # build return node
+        return TreeNode(None, None, n.substring(1, len(n) - 1))
+    # build interior node
+    node = TreeNode(n, {}, None)
+    val = atts[2]
 
     index = 2
     while val != ")":
-        node.children.put(val, readNode(infile))
+        node.children.put(val, readNode(atts))
         index += 1
         val[index]
     return node
 
    
-def predictFromModel(data):
+def predictFromModel(data, dtp):
     try:
         s = open(data, 'r')
         data = []
-        predictions = []
+        dtp.predictions = []
         for element in s:
             next(s) #skips -1
-            for element in attArr:
+            for element in dtp.attArr:
                 data.append(element)
-            pred = traceTree(root, data)
-            predictions.append(pred)
+            pred = traceTree(dtp.root, data, dtp)
+            dtp.predictions.append(pred)
     except:
         print("test file has error")
 
       
-def traceTree(node, data):
-    if node.returnVal != null:
+def traceTree(node, data, dtp):
+    if node.returnVal != None:
         return node.returnVal
     att = node.attribute
-    val = data.get(attArr.index(att))
+    val = data.get(dtp.attArr.index(att))
     t = node.children.get(val)
     return traceTree(t, data)
 
    
-def savePredictions(output):
+def savePredictions(output, dtp):
     try:
         outfile = open(output, 'w')
-        for element in predictions:
+        for element in dtp.predictions:
             outfile.write(element)
         outfile.close()
     except:
@@ -308,9 +330,7 @@ def EvaDT(predictionLabel, realLabel, output):
     """
     This is the main function. You should compare line by line,
      and calculate how many predictions are correct, how many predictions are not correct. The output could be:
-
     In total, there are ??? predictions. ??? are correct, and ??? are not correct.
-
     """
     correct,incorrect, length = 0,0,0
     with open(predictionLabel,'r') as file1, open(realLabel, 'r') as file2:
